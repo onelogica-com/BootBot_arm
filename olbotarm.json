@@ -65,7 +65,7 @@
         },
         "postgresServerName": {
             "type": "string",
-            "defaultValue": "[format('{0}-postgresername', parameters('ResourcePrefix'))]",
+           "defaultValue": "[format('{0}-postgresservername', parameters('ResourcePrefix'))]",
             "metadata": {
                 "description": "The name of the PostgreSQL Flexible Server"
             }
@@ -146,7 +146,7 @@
         },
         "TextAnalyticsAccountName": {
             "defaultValue": "[format('{0}aztextanalytics', parameters('ResourcePrefix'))]",
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "Name of Azure Translator Account"
             }
@@ -181,7 +181,7 @@
             "properties": {
                 "model": {
                     "format": "OpenAI",
-                    "name": "[parameters('AzureOpenAIGPT4ominiModelName)]",
+                    "name": "[parameters('AzureOpenAIGPT4ominiModelName')]",
                     "version": "[parameters('AzureOpenAIGPT4ominiModelVersion')]"
                 },
                 "raiPolicyName": "Microsoft.Default",
