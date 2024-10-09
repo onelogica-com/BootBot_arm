@@ -1,0 +1,218 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "botServiceName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the Bot Service"
+            }
+        },
+        "openAiName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the OpenAI service"
+            }
+        },
+        "searchServiceName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the Azure Cognitive Search service"
+            }
+        },
+        "webAppName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the Web App"
+            }
+        },
+        "postgresServerName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the PostgreSQL Flexible Server"
+            }
+        },
+        "administratorLogin": {
+            "type": "string",
+            "metadata": {
+                "description": "PostgreSQL administrator login name"
+            }
+        },
+        "administratorLoginPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "PostgreSQL administrator password"
+            }
+        },
+        "repositoryUrl": {
+            "type": "string",
+            "metadata": {
+                "description": "The URL of the GitHub repository"
+            }
+        },
+        "branch": {
+            "type": "string",
+            "defaultValue": "main",
+            "metadata": {
+                "description": "The branch of the GitHub repository to use"
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Location for all resources"
+            }
+        }
+    },
+    "variables": {
+        "languageServiceName": "[concat(parameters('botServiceName'), '-lang')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.CognitiveServices/accounts",
+            "apiVersion": "2023-05-01",
+            "name": "[parameters('openAiName')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "S0"
+            },
+            "kind": "OpenAI"
+        },
+        {
+            "type": "Microsoft.CognitiveServices/accounts",
+            "apiVersion": "2023-05-01",
+            "name": "[variables('languageServiceName')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "S0"
+            },
+            "kind": "TextAnalytics"
+        },
+        {
+            "type": "Microsoft.Search/searchServices",
+            "apiVersion": "2023-11-01",
+            "name": "[parameters('searchServiceName')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "standard"
+            }
+        },
+        {
+            "type": "Microsoft.BotService/botServices",
+            "apiVersion": "2022-09-15",
+            "name": "[parameters('botServiceName')]",
+            "location": "global",
+            "sku": {
+                "name": "F0"
+            },
+            "kind": "bot",
+            "properties": {
+                "endpoint": "[concat('https://', parameters('webAppName'), '.azurewebsites.net/api/messages')]",
+                "msaAppId": ""
+            }
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2022-09-01",
+            "name": "[parameters('webAppName')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "S1",
+                "tier": "Standard",
+                "size": "S1",
+                "family": "S",
+                "capacity": 1
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2022-09-01",
+            "name": "[parameters('webAppName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('webAppName'))]"
+            ],
+            "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('webAppName'))]",
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name": "OPENAI_ENDPOINT",
+                            "value": "[reference(parameters('openAiName')).endpoint]"
+                        },
+                        {
+                            "name": "SEARCH_ENDPOINT",
+                            "value": "[reference(parameters('searchServiceName')).hostName]"
+                        },
+                        {
+                            "name": "POSTGRESQL_CONNECTION_STRING",
+                            "value": "[concat('Host=', reference(parameters('postgresServerName')).fullyQualifiedDomainName, ';Database=postgres;Username=', parameters('administratorLogin'), ';Password=', parameters('administratorLoginPassword'))]"
+                        }
+                    ]
+                }
+            },
+            "resources": [
+                {
+                    "type": "sourcecontrols",
+                    "apiVersion": "2022-09-01",
+                    "name": "web",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]"
+                    ],
+                    "properties": {
+                        "repoUrl": "[parameters('repositoryUrl')]",
+                        "branch": "[parameters('branch')]",
+                        "isManualIntegration": false,
+                        "deploymentRollbackEnabled": true,
+                        "isMercurial": false
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.DBforPostgreSQL/flexibleServers",
+            "apiVersion": "2022-12-01",
+            "name": "[parameters('postgresServerName')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "Standard_B1ms",
+                "tier": "Burstable"
+            },
+            "properties": {
+                "version": "14",
+                "administratorLogin": "[parameters('administratorLogin')]",
+                "administratorLoginPassword": "[parameters('administratorLoginPassword')]",
+                "storage": {
+                    "storageSizeGB": 32
+                },
+                "backup": {
+                    "backupRetentionDays": 7,
+                    "geoRedundantBackup": "Disabled"
+                },
+                "network": {
+                    "delegatedSubnetResourceId": "",
+                    "privateDnsZoneArmResourceId": ""
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "openAiEndpoint": {
+            "type": "string",
+            "value": "[reference(parameters('openAiName')).endpoint]"
+        },
+        "searchServiceEndpoint": {
+            "type": "string",
+            "value": "[reference(parameters('searchServiceName')).hostName]"
+        },
+        "webAppUrl": {
+            "type": "string",
+            "value": "[reference(parameters('webAppName')).defaultHostName]"
+        },
+        "postgresServerFqdn": {
+            "type": "string",
+            "value": "[reference(parameters('postgresServerName')).fullyQualifiedDomainName]"
+        }
+    }
+}
