@@ -184,8 +184,12 @@
                     "name": "[parameters('AzureOpenAIGPT4ominiModelName')]",
                     "version": "[parameters('AzureOpenAIGPT4ominiModelVersion')]"
                 },
-                "raiPolicyName": "Microsoft.Default",
-                "capacity": "[parameters('gpt4Capacity')]"
+                "sku": {
+                    "name": "GlobalStandard",
+                    "capacity": "[parameters('gpt4Capacity')]"
+                },
+                "raiPolicyName": "Microsoft.Default"
+                
             }
         },
         {
@@ -195,6 +199,10 @@
             "dependsOn": [
                 "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiName'))]"
             ],
+            "sku": {
+                "name": "GlobalStandard",
+                "capacity": "[parameters('gpt4Capacity')]"
+            },
             "properties": {
                 "model": {
                     "format": "OpenAI",
@@ -202,8 +210,7 @@
                     "version": "[parameters('AzureOpenAIGPT4ModelVersion')]"
                 
             },
-                "raiPolicyName": "Microsoft.Default",
-                "capacity": "[parameters('gpt4Capacity')]"
+                "raiPolicyName": "Microsoft.Default"
             }
         },
         {
