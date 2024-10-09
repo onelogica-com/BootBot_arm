@@ -150,6 +150,82 @@
             "metadata": {
                 "description": "Name of Azure Translator Account"
             }
+        },
+        "postgresFlexibleServersSkuTier": {
+            "type": "string",
+            "defaultValue": "Burstable",
+            "allowedValues": [
+                "Burstable",
+                "GeneralPurpose",
+                "MemoryOptimized"
+            ],
+            "metadata": {
+                "description": "The tier of the particular SKU, e.g. Burstable"
+            }
+        },
+        "skuName": {
+            "type": "string",
+            "defaultValue": "Standard_B1ms",
+            "metadata": {
+                "description": "The name of the sku, typically, tier + family + cores, e.g. Standard_D4s_v3"
+            }
+        },
+        "skuSizeMB": {
+            "type": "int",
+            "defaultValue": 51200,
+            "metadata": {
+                "description": "Azure database for PostgreSQL Sku Size "
+            }
+        },
+        "skuTier": {
+            "type": "string",
+            "defaultValue": "Burstable",
+            "metadata": {
+                "description": "Azure database for PostgreSQL pricing tier"
+            }
+        },
+        "skuFamily": {
+            "type": "string",
+            "defaultValue": "Gen5",
+            "metadata": {
+                "description": "Azure database for PostgreSQL sku family"
+            }
+        },
+        "postgresqlVersion": {
+            "type": "string",
+            "defaultValue": "15",
+            "allowedValues": [
+                "16",
+                "15",
+                "14",
+                "13",
+                "12",
+                "11"
+            ],
+            "metadata": {
+                "description": "PostgreSQL version"
+            }
+        },
+        "locationReplica": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Location for replica database."
+            }
+        },
+        "backupRetentionDays": {
+            "type": "int",
+            "defaultValue": 7,
+            "metadata": {
+                "description": "PostgreSQL Server backup retention days"
+            }
+        },
+        "geoRedundantBackup": {
+            "type": "string",
+            "defaultValue": "Disabled",
+            "metadata": {
+                "description": "Geo-Redundant Backup setting"
+            }
         }
     },
     "variables": {
@@ -326,31 +402,54 @@
                     }
                 }
             ]
-        },
+        },  
         {
             "type": "Microsoft.DBforPostgreSQL/flexibleServers",
-            "apiVersion": "2022-12-01",
-            "name": "[parameters('postgresServerName')]",
-            "location": "[parameters('location')]",
+            "apiVersion": "2023-06-01-preview",
+            "name": "[parameters('serverName')]",
+            "location": "[resourceGroup().location]",
             "sku": {
-                "name": "Standard_B1ms",
-                "tier": "Burstable"
+                "name": "[parameters('skuName')]",
+                "tier": "[parameters('postgresFlexibleServersSkuTier')]"
             },
             "properties": {
-                "version": "14",
+                "replica": {
+                    "role": "Primary"
+                },
+                "storage": {
+                    "iops": 500,
+                    "tier": "P10",
+                    "storageSizeGB": "[parameters('skuSizeGB')]"
+                },
+                "version": "[parameters('postgresqlVersion')]",
                 "administratorLogin": "[parameters('administratorLogin')]",
                 "administratorLoginPassword": "[parameters('administratorLoginPassword')]",
-                "storage": {
-                    "storageSizeGB": 32
-                },
+                "availabilityZone": "[parameters('availabilityZone')]",
                 "backup": {
                     "backupRetentionDays": 7,
                     "geoRedundantBackup": "Disabled"
                 },
                 "network": {
                     "delegatedSubnetResourceId": "",
-                    "privateDnsZoneArmResourceId": ""
-                }
+                    "privateDnsZoneArmResourceId": "",
+                    "firewallRules": [
+                        {
+                            "name": "AllowAllAzureServices",
+                            "startIpAddress": "0.0.0.0",
+                            "endIpAddress": "0.0.0.0"
+                        },
+                        {
+                            "name": "AllowAllIPs",
+                            "startIpAddress": "0.0.0.0",
+                            "endIpAddress": "255.255.255.255"
+                        }
+                    ]
+                },
+                "highAvailability": {
+                    "mode": "SameZone",
+                    "standbyAvailabilityZone": "1"
+                },
+                "replicationRole": "Primary"
             }
         }
     ],
