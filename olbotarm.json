@@ -191,7 +191,7 @@
         {
             "type": "Microsoft.CognitiveServices/accounts/deployments",
             "apiVersion": "2023-05-01",
-            "name": "[concat(parameters('openAiName'),[parameters('AzureOpenAIGPT4ModelName')]]",
+            "name": "[concat(parameters('openAiName'),'/gpt-4o')]",
             "dependsOn": [
                 "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiName'))]"
             ],
