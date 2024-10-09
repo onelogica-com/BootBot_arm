@@ -14,6 +14,21 @@
                 "description": "The name of the OpenAI service"
             }
         },
+        "openAiLocation": {
+            "type": "string",
+            "defaultValue": "eastus",
+            "allowedValues": [
+                "eastus",
+                "southindia",
+                "sweedencentral",
+                "southcentralus",
+                "westeurope",
+                "francecentral"
+            ],
+            "metadata": {
+                "description": "Location for OpenAI resources. Limited to specific regions."
+            }
+        },
         "searchServiceName": {
             "type": "string",
             "metadata": {
@@ -63,6 +78,20 @@
                 "description": "The branch of the GitHub repository to use"
             }
         },
+        "gpt4Capacity": {
+            "type": "int",
+            "defaultValue": 10,
+            "metadata": {
+                "description": "The capacity for GPT-4 models in TPM (Tokens Per Minute)"
+            }
+        },
+        "embeddingCapacity": {
+            "type": "int",
+            "defaultValue": 120,
+            "metadata": {
+                "description": "The capacity for embedding model in TPM"
+            }
+        },
         "location": {
             "type": "string",
             "defaultValue": "[resourceGroup().location]",
@@ -84,6 +113,71 @@
                 "name": "S0"
             },
             "kind": "OpenAI"
+        },
+        {
+            "type": "Microsoft.CognitiveServices/accounts",
+            "apiVersion": "2023-05-01",
+            "name": "[parameters('openAiName')]",
+            "location": "[parameters('openAiLocation')]",
+            "sku": {
+                "name": "S0"
+            },
+            "kind": "OpenAI",
+            "properties": {
+                "customSubDomainName": "[parameters('openAiName')]",
+                "publicNetworkAccess": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.CognitiveServices/accounts/deployments",
+            "apiVersion": "2023-05-01",
+            "name": "[concat(parameters('openAiName'), '/gpt-4')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiName'))]"
+            ],
+            "properties": {
+                "model": {
+                    "format": "OpenAI",
+                    "name": "gpt-4o",
+                    "version": "0613"
+                },
+                "raiPolicyName": "Microsoft.Default",
+                "capacity": "[parameters('gpt4Capacity')]"
+            }
+        },
+        {
+            "type": "Microsoft.CognitiveServices/accounts/deployments",
+            "apiVersion": "2023-05-01",
+            "name": "[concat(parameters('openAiName'), '/gpt-4-turbo')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiName'))]"
+            ],
+            "properties": {
+                "model": {
+                    "format": "OpenAI",
+                    "name": "gpt-4o-mini",
+                    "version": "1106-preview"
+                },
+                "raiPolicyName": "Microsoft.Default",
+                "capacity": "[parameters('gpt4Capacity')]"
+            }
+        },
+        {
+            "type": "Microsoft.CognitiveServices/accounts/deployments",
+            "apiVersion": "2023-05-01",
+            "name": "[concat(parameters('openAiName'), '/text-embedding-ada-002')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiName'))]"
+            ],
+            "properties": {
+                "model": {
+                    "format": "OpenAI",
+                    "name": "text-embedding-ada-002",
+                    "version": "2"
+                },
+                "raiPolicyName": "Microsoft.Default",
+                "capacity": "[parameters('embeddingCapacity')]"
+            }
         },
         {
             "type": "Microsoft.CognitiveServices/accounts",
