@@ -1,9 +1,23 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
+    "metadata": {
+        "_generator": {
+            "name": "bicep",
+            "version": "0.9.1.41621",
+            "templateHash": "2637152180661081755"
+        }
+    },
     "parameters": {
+        "ResourcePrefix": {
+            "type": "string",
+            "metadata": {
+                "description": "provide a 2-13 character prefix for all resources."
+            }
+        },
         "botServiceName": {
             "type": "string",
+            "defaultValue": "[format('{0}_botservice', parameters('ResourcePrefix'))]",
             "metadata": {
                 "description": "The name of the Bot Service"
             }
@@ -31,12 +45,14 @@
         },
         "searchServiceName": {
             "type": "string",
+            "defaultValue": "[format('{0}azsearchservice', parameters('ResourcePrefix'))]",
             "metadata": {
                 "description": "The name of the Azure Cognitive Search service"
             }
         },
         "webAppName": {
             "type": "string",
+            "defaultValue": "[format('{0}-website', parameters('ResourcePrefix'))]",
             "metadata": {
                 "description": "The name of the Web App"
             }
@@ -49,6 +65,7 @@
         },
         "postgresServerName": {
             "type": "string",
+            "defaultValue": "[format('{0}-postgresername', parameters('ResourcePrefix'))]",
             "metadata": {
                 "description": "The name of the PostgreSQL Flexible Server"
             }
@@ -97,6 +114,13 @@
             "defaultValue": "[resourceGroup().location]",
             "metadata": {
                 "description": "Location for all resources"
+            }
+        },
+        "TextAnalyticsAccountName": {
+            "defaultValue": "[format('{0}aztextanalytics', parameters('ResourcePrefix'))]",
+            "type": "String",
+            "metadata": {
+                "description": "Name of Azure Translator Account"
             }
         }
     },
@@ -173,7 +197,7 @@
         {
             "type": "Microsoft.CognitiveServices/accounts",
             "apiVersion": "2023-05-01",
-            "name": "[variables('languageServiceName')]",
+            "name": "[parameters('TextAnalyticsAccountName')]",
             "location": "[parameters('location')]",
             "sku": {
                 "name": "S0"
