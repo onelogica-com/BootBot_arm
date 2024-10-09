@@ -102,6 +102,34 @@
                 "description": "The capacity for GPT-4 models in TPM (Tokens Per Minute)"
             }
         },
+        "AzureOpenAIGPT4ModelVersion": {
+            "type": "string",
+            "defaultValue": "0613",
+            "metadata": {
+                "description": "Azure OpenAI GPT 4 Model Version"
+            }
+        },
+        "AzureOpenAIGPT4ModelName": {
+            "type": "string",
+            "defaultValue": "gpt-4o",
+            "metadata": {
+                "description": "Azure OpenAI  GPT 4 Model Name"
+            }
+        },
+        "AzureOpenAIGPT4ominiModelName": {
+            "type": "string",
+            "defaultValue": "gpt-4o-mini",
+            "metadata": {
+                "description": "Azure OpenAI  GPT 4 Model Name"
+            }
+        },
+        "AzureOpenAIGPT4ominiModelVersion": {
+            "type": "string",
+            "defaultValue": "0613",
+            "metadata": {
+                "description": "Azure OpenAI GPT 4 Model Version"
+            }
+        },
         "embeddingCapacity": {
             "type": "int",
             "defaultValue": 120,
@@ -146,15 +174,15 @@
         {
             "type": "Microsoft.CognitiveServices/accounts/deployments",
             "apiVersion": "2023-05-01",
-            "name": "[concat(parameters('openAiName'), '/gpt-4')]",
+            "name": "[concat(parameters('openAiName'), '/gpt-4o-mini')]",
             "dependsOn": [
                 "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiName'))]"
             ],
             "properties": {
                 "model": {
                     "format": "OpenAI",
-                    "name": "gpt-4o",
-                    "version": "0613"
+                    "name": "[parameters('AzureOpenAIGPT4ominiModelName)]",
+                    "version": "[parameters('AzureOpenAIGPT4ominiModelVersion')]"
                 },
                 "raiPolicyName": "Microsoft.Default",
                 "capacity": "[parameters('gpt4Capacity')]"
@@ -163,16 +191,17 @@
         {
             "type": "Microsoft.CognitiveServices/accounts/deployments",
             "apiVersion": "2023-05-01",
-            "name": "[concat(parameters('openAiName'), '/gpt-4-turbo')]",
+            "name": "[concat(parameters('openAiName'),[parameters('AzureOpenAIGPT4ModelName')]]",
             "dependsOn": [
                 "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiName'))]"
             ],
             "properties": {
                 "model": {
                     "format": "OpenAI",
-                    "name": "gpt-4o-mini",
-                    "version": "1106-preview"
-                },
+                    "name": "[parameters('AzureOpenAIGPT4ModelName')]",
+                    "version": "[parameters('AzureOpenAIGPT4ModelVersion')]"
+                
+            },
                 "raiPolicyName": "Microsoft.Default",
                 "capacity": "[parameters('gpt4Capacity')]"
             }
@@ -194,15 +223,21 @@
                 "capacity": "[parameters('embeddingCapacity')]"
             }
         },
-        {
+          {
             "type": "Microsoft.CognitiveServices/accounts",
-            "apiVersion": "2023-05-01",
+            "apiVersion": "2023-10-01-preview",
             "name": "[parameters('TextAnalyticsAccountName')]",
-            "location": "[parameters('location')]",
+            "location": "[resourceGroup().location]",
             "sku": {
-                "name": "S0"
+                "name": "S"
             },
-            "kind": "TextAnalytics"
+            "kind": "TextAnalytics",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "publicNetworkAccess": "Enabled"
+            }
         },
         {
             "type": "Microsoft.Search/searchServices",
