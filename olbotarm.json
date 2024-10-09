@@ -104,16 +104,7 @@
         "languageServiceName": "[concat(parameters('botServiceName'), '-lang')]"
     },
     "resources": [
-        {
-            "type": "Microsoft.CognitiveServices/accounts",
-            "apiVersion": "2023-05-01",
-            "name": "[parameters('openAiName')]",
-            "location": "[parameters('location')]",
-            "sku": {
-                "name": "S0"
-            },
-            "kind": "OpenAI"
-        },
+       
         {
             "type": "Microsoft.CognitiveServices/accounts",
             "apiVersion": "2023-05-01",
